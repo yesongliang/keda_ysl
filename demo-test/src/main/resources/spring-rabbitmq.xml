@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+                http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/rabbit
+                http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+
+	<rabbit:connection-factory id="connectionFactory"
+		host="${rabbitmq.host}" username="${rabbitmq.username}" password="${rabbitmq.password}"
+		port="${rabbitmq.port}" />
+
+	<rabbit:admin connection-factory="connectionFactory" />
+
+	<!-- queue 队列声明 用于接收消息的队列 -->
+	<rabbit:queue id="queue_ysl" durable="false" auto-delete="true"
+		exclusive="true" name="queue_ysl" />
+
+	<!-- spring template声明 用于发送消息 -->
+	<rabbit:template exchange="${rabbitmq.exchangename}"
+		id="amqpTemplate" connection-factory="connectionFactory"
+		message-converter="jsonMessageConverter" />
+
+	<!-- exchange queue binging key 绑定 durable:是否持久化 -->
+	<rabbit:topic-exchange name="${rabbitmq.exchangename}"
+		id="${rabbitmq.exchangename}" durable="false">
+		<rabbit:bindings>
+			<rabbit:binding queue="queue_ysl" pattern="ysl.*"></rabbit:binding>
+		</rabbit:bindings>
+	</rabbit:topic-exchange>
+
+	<bean id="receiveLitener" class="com.kedacom.ysl.rabbitmq.receiver.ReceiveLitener" />
+
+	<!--由于消费端当队列有数据到达时，对应监听的对象就会被通知到，无法做到批量获取，批量入库，因此可以在消费端缓存一个临时队列，将mq取出来的数据存入本地队列 -->
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<!-- 核心线程数 -->
+		<property name="corePoolSize" value="${task.core_pool_size}" />
+		<!-- 最大线程数 -->
+		<property name="maxPoolSize" value="${task.max_pool_size}" />
+		<!-- 队列最大长度 -->
+		<property name="queueCapacity" value="${task.queue_capacity}" />
+		<!-- 线程池维护线程所允许的空闲时间，默认为60s -->
+		<property name="keepAliveSeconds" value="${task.keep_alive_seconds}" />
+	</bean>
+
+	<!-- queue litener 观察 监听模式 当有消息到达时会通知监听在对应的队列上的监听对象 -->
+	<rabbit:listener-container
+		connection-factory="connectionFactory" acknowledge="auto"
+		task-executor="taskExecutor" message-converter="jsonMessageConverter">
+		<rabbit:listener queues="queue_ysl" ref="receiveLitener" />
+	</rabbit:listener-container>
+
+	<!-- 消息对象json转换类 -->
+	<bean id="jsonMessageConverter"
+		class="com.kedacom.ysl.rabbitmq.sender.FastJsonMessageConverter" />
+</beans>

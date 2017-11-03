@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+									 http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+								     http://www.springframework.org/schema/context
+								     http://www.springframework.org/schema/context/spring-context-4.0.xsd
+								     http://www.springframework.org/schema/tx
+								     http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+								     http://www.springframework.org/schema/aop 
+									 http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+								     http://mybatis.org/schema/mybatis-spring 
+									 http://mybatis.org/schema/mybatis-spring.xsd"
+	default-autowire="byName">
+
+	<context:annotation-config />
+
+	<!-- 注解式 -->
+	<tx:annotation-driven />
+
+	<context:component-scan base-package="com.kedacom.ysl" />
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>
+					classpath:redis.properties
+				</value>
+				<value>
+					classpath:rabbitmq.properties
+				</value>
+				<value>
+					classpath:mysql_jdbc.properties
+				</value>
+			</list>
+		</property>
+	</bean>
+
+	<import resource="spring-redis.xml" />
+
+	<import resource="spring-rabbitmq.xml" />
+
+	<import resource="spring-quartz.xml" />
+
+	<import resource="applicationContext-schedule.xml" />
+
+	<import resource="spring-mybatis.xml" />
+
+	<bean id="springBeanUtils" class="com.kedacom.ysl.util.SpringBeanUtils" />
+
+	<bean id="rabbitMQConfig" class="com.kedacom.ysl.rabbitmq.config.RabbitMQConfig">
+		<constructor-arg name="host" value="${rabbitmq.host}" />
+		<constructor-arg name="port" value="${rabbitmq.port}"
+			type="int" />
+		<constructor-arg name="username" value="${rabbitmq.username}" />
+		<constructor-arg name="password" value="${rabbitmq.password}" />
+		<constructor-arg name="exchangeName" value="${rabbitmq.exchangename}" />
+	</bean>
+
+	<!-- MessageReveiverFactory -->
+	<bean id="messageReveiverFactory"
+		class="com.kedacom.ysl.rabbitmq.receiver.MessageReveiverFactory"
+		init-method="init" />
+
+	<!-- 定义aspectj -->
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+
+	<bean id="logAspect" class="com.kedacom.ysl.logAOP.aspect.LogAspect"></bean>
+	<aop:aspectj-autoproxy proxy-target-class="true">
+		<aop:include name="logAspect" />
+	</aop:aspectj-autoproxy>
+
+</beans>
