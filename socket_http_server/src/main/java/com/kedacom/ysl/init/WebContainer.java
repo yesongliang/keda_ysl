@@ -53,8 +53,7 @@ public class WebContainer {
 	 * 
 	 * @author 95488
 	 * @createDate 2019年6月13日
-	 * @param packageName
-	 *            扫描路径
+	 * @param packageName 扫描路径
 	 */
 	public void init(String packageName) {
 		doScanner(packageName);
@@ -147,18 +146,18 @@ public class WebContainer {
 	 * 
 	 * @author 95488
 	 * @createDate 2019年6月13日
-	 * @param packageName
-	 *            扫描包路径
+	 * @param packageName 扫描包路径
 	 */
 	private void doScanner(String packageName) {
 		// 获取项目路径
 		String projectPath = getClass().getClassLoader().getResource("").toString();
+		// ubuntu
 		if (projectPath.contains(":")) {
-			projectPath = projectPath.replace("file:/", "");
+			projectPath = projectPath.replace("file:", "");
 		}
 		log.debug("项目路径,projectPath={}", projectPath);
 		// 把所有的.替换成/
-		File dir = new File(projectPath + packageName.replaceAll("\\.", "/"));
+		File dir = new File(projectPath + packageName.replaceAll("\\.", File.separator));
 		for (File file : dir.listFiles()) {
 			if (file.isDirectory()) {
 				// 递归读取包

@@ -55,8 +55,7 @@ public class Request {
 	 * 
 	 * @author 95488
 	 * @createDate 2019年6月13日
-	 * @param input
-	 *            请求流
+	 * @param input 请求流
 	 */
 	public String parse(InputStream input) {
 		String message = null;
@@ -115,7 +114,7 @@ public class Request {
 			}
 			log.debug("请求方法:{},请求路径:{},请求参数:{},请求参数格式:{}", method, uri, requestParam, contentType);
 			// 解析请求参数
-			message = parseParam(requestParam.trim());
+			message = parseParam(requestParam);
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 			log.error("解析请求异常--格式转换,message={}", e.getMessage());

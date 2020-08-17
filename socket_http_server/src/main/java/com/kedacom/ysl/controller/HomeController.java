@@ -12,9 +12,18 @@ import lombok.extern.slf4j.Slf4j;
 public class HomeController {
 
 	@MyRequestMapping(value = "/login", method = "POST")
-	public JsonResult<?> login(@MyRequestParam("username") String username, @MyRequestParam("password") String password) {
+	public JsonResult<String> login(@MyRequestParam("username") String username, @MyRequestParam("password") String password) {
 		log.info("---login--- username={},password={}", username, password);
-		JsonResult<?> jsonResult = new JsonResult<>();
+		JsonResult<String> jsonResult = new JsonResult<>();
+		jsonResult.setData("success");
+		return jsonResult;
+	}
+
+	@MyRequestMapping(value = "/hello", method = "GET")
+	public JsonResult<String> hello() {
+		log.info("---hello---");
+		JsonResult<String> jsonResult = new JsonResult<>();
+		jsonResult.setData("hello world");
 		return jsonResult;
 	}
 
